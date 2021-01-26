@@ -7,5 +7,4 @@ namespace ApiClient
         public List<People> results { get; set; }
 
     }
-
 }

@@ -24,9 +24,8 @@ namespace ApiClient
             }
 
 
-            table.Write();
+            table.Write(Format.Minimal);
         }
-
         static async Task ShowAllSpecies(string token, string pageNumber)
         {
             var client = new HttpClient();
@@ -41,55 +40,77 @@ namespace ApiClient
             }
 
 
-            table.Write();
+            table.Write(Format.Minimal);
         }
 
+        static async Task SearchPerson(string tokenPerson)
+        {
+            var client = new HttpClient();
+            var responseAsStream = await client.GetStreamAsync($"https://swapi.dev/api/people/?search={tokenPerson}");
+            var starWarsPerson = await JsonSerializer.DeserializeAsync<PeopleResultsContainer>(responseAsStream);
 
+            var table = new ConsoleTable("Name", "Height", "Hair Color", "Eye Color", "Gender");
 
+            foreach (var person in starWarsPerson.results)
+            {
+                table.AddRow(person.Name, person.Height, person.HairColor, person.EyeColor, person.Gender);
+            }
 
+            table.Write(Format.Minimal);
+        }
 
         static async Task Main(string[] args)
         {
-
-            var token = "";
+            var tokenPicked = "";
             var pageNumber = "";
-            if (args.Length == 0)
+
+            var exitChoice = false;
+            while (exitChoice == false)
             {
-                var exitChoice = false;
-                while (exitChoice == false)
+                Console.Write("What list would you like? (q to quit) ");
+                tokenPicked = Console.ReadLine();
+                switch (tokenPicked)
                 {
-                    Console.Write("What list would you like? ");
-                    token = Console.ReadLine();
+                    case "species":
+                        Console.WriteLine("Please Pick an Option:");
+                        Console.WriteLine(" (P)rint species on page.");
+                        var userChoiceSpecies = Console.ReadLine().ToLower();
 
-                    Console.Write("What page would you like? ");
-                    pageNumber = Console.ReadLine();
+                        if (userChoiceSpecies == "p")
+                        {
+                            Console.Write("What page would you like? ");
+                            pageNumber = Console.ReadLine();
+                            await ShowAllSpecies(tokenPicked, pageNumber);
+                            Console.WriteLine("Press ENTER");
+                            Console.ReadLine();
+                        }
+                        break;
+                    case "people":
+                        Console.WriteLine("Please Pick an Option:");
+                        Console.WriteLine(" (P)rint people on page. \n (F)ind a person.\n");
+                        var userChoicePeople = Console.ReadLine().ToLower();
 
-                    switch (token)
-                    {
-                        case "species":
-                            await ShowAllSpecies(token, pageNumber);
-                            Console.ReadLine();
+                        if (userChoicePeople == "p")
+                        {
+                            Console.Write("What page would you like? ");
+                            pageNumber = Console.ReadLine();
+                            await ShowAllPeople(tokenPicked, pageNumber);
                             Console.WriteLine("Press ENTER");
-                            break;
-                        case "people":
-                            await ShowAllPeople(token, pageNumber);
                             Console.ReadLine();
-                            Console.WriteLine("Press ENTER");
-                            break;
-                        case "quit":
-                            exitChoice = true;
-                            break;
-                    }
+                        }
+                        if (userChoicePeople == "f")
+                        {
+                            Console.Write("What person are you looking for?\n");
+                            var pickedPerson = Console.ReadLine();
+                            await SearchPerson(pickedPerson);
+                        }
+                        break;
+                    case "q":
+                        exitChoice = true;
+                        break;
                 }
-
             }
-            else
-            {
-                token = args[0];
-            }
-
         }
-
-
     }
 }
+
