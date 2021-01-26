@@ -27,6 +27,25 @@ namespace ApiClient
             table.Write();
         }
 
+        static async Task ShowAllSpecies(string token, string pageNumber)
+        {
+            var client = new HttpClient();
+            var responseAsStream = await client.GetStreamAsync($"https://swapi.dev/api/{token}/?page={pageNumber}");
+            var starWarsSpecies = await JsonSerializer.DeserializeAsync<SpeciesResultsContainer>(responseAsStream);
+
+            var table = new ConsoleTable("Name", "Classification", "Average Height", "Language");
+
+            foreach (var species in starWarsSpecies.results)
+            {
+                table.AddRow(species.Name, species.Classification, species.AvgHeight, species.Language);
+            }
+
+
+            table.Write();
+        }
+
+
+
 
 
         static async Task Main(string[] args)
@@ -36,11 +55,32 @@ namespace ApiClient
             var pageNumber = "";
             if (args.Length == 0)
             {
-                Console.Write("What list would you like? ");
-                token = Console.ReadLine();
+                var exitChoice = false;
+                while (exitChoice == false)
+                {
+                    Console.Write("What list would you like? ");
+                    token = Console.ReadLine();
 
-                Console.Write("What page would you like? ");
-                pageNumber = Console.ReadLine();
+                    Console.Write("What page would you like? ");
+                    pageNumber = Console.ReadLine();
+
+                    switch (token)
+                    {
+                        case "species":
+                            await ShowAllSpecies(token, pageNumber);
+                            Console.ReadLine();
+                            Console.WriteLine("Press ENTER");
+                            break;
+                        case "people":
+                            await ShowAllPeople(token, pageNumber);
+                            Console.ReadLine();
+                            Console.WriteLine("Press ENTER");
+                            break;
+                        case "quit":
+                            exitChoice = true;
+                            break;
+                    }
+                }
 
             }
             else
@@ -48,8 +88,8 @@ namespace ApiClient
                 token = args[0];
             }
 
-            await ShowAllPeople(token, pageNumber);
-            Console.ReadLine();
         }
+
+
     }
 }
